@@ -3,10 +3,12 @@ import time
 import msgpack
 from enum import Enum, auto
 import utm
-
 import numpy as np
+from scipy.spatial import Voronoi, voronoi_plot_2d
+import pickle
 
-from planning_utils import a_star, heuristic, create_grid, collinearity_float, point
+
+from planning_utils import a_star, heuristic, create_grid, collinearity_float, point, create_grid_and_edges, visualization, closest_point, a_star_graph
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -25,14 +27,17 @@ class States(Enum):
 
 class MotionPlanning(Drone):
 
-    def __init__(self, connection):
+    def __init__(self, connection, grid='y'):
         super().__init__(connection)
 
         self.target_position = np.array([0.0, 0.0, 0.0])
         self.waypoints = []
         self.in_mission = True
         self.check_state = {}
+        self.global_goal_position = np.array([-122.398570, 37.796162, 0.0])  #np.array([-122.397781, 37.793920, 0.0])
+        self.grid = True if grid == 'y' else False  # whether to calculate the gird (y) or load existing grid (n)
 
+        print('grid:', self.grid)
         # initial state
         self.flight_state = States.MANUAL
 
@@ -119,6 +124,7 @@ class MotionPlanning(Drone):
     def plan_path(self):
         self.flight_state = States.PLANNING
         print("Searching for a path ...")
+
         TARGET_ALTITUDE = 100
         SAFETY_DISTANCE = 5
 
@@ -127,8 +133,6 @@ class MotionPlanning(Drone):
         with open('./colliders.csv') as f:
             s_line = f.readline()
             points = s_line.split(',')
-
-            print('points:', points)
 
             lat0 = float(points[0].split()[1])
             lon0 = float(points[1].split()[1])
@@ -143,46 +147,97 @@ class MotionPlanning(Drone):
         self.local_position[0] = local_pos[0]
         self.local_position[1] = local_pos[1]
         self.local_position[2] = local_pos[2]
+        local_goal = global_to_local(self.global_goal_position, self.global_home)
+        print('local goal:', local_goal)
         
         print('global home {0}, position {1}, local position {2}'.format(self.global_home, self.global_position,
                                                                          self.local_position))
         # Read in obstacle map
         data = np.loadtxt('colliders.csv', delimiter=',', dtype='Float64', skiprows=2)
         
+        # Create Voronoi graph
+        grid = None
+        nodes = None
+        edges = None
+        north_offset = 0
+        east_offset = 0
+
+
+
+
+        if self.grid:
+            grid, nodes, edges, north_offset, east_offset = create_grid_and_edges(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
+            
+            nodes = []
+            for edge in edges:
+                nodes.append(edge[0])
+                nodes.append(edge[1])
+            nodes = set(nodes)         
+            
+            grid_data = {'grid':grid, 'nodes':nodes, 'edges':edges, 'north_offset':north_offset, 'east_offset':east_offset}
+            with open('pickle.pk', 'wb') as f:
+                pickle.dump(grid_data, f)
+        else: 
+            with open('pickle.pk', 'rb') as f:
+                grid_data = pickle.load(f)
+                grid = grid_data['grid']
+                nodes = grid_data['nodes']
+                edges = grid_data['edges']
+                north_offset = grid_data['north_offset']
+                east_offset = grid_data['east_offset']
+               
+        nodes = []
+        for edge in edges:
+            nodes.append(edge[0])
+            nodes.append(edge[1])
+        nodes = set(nodes)   
+
+        print('Found %5d edges' % len(edges))
+        #print('grid:')
+        #print(grid)
+        print('nodes:')
+        print(nodes)
+        #print('edges:')
+        #print(edges)
+       
+        #visualization(grid, edges)
+
+
         # Define a grid for a particular altitude and safety margin around obstacles
-        grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
+        #grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
-        grid_start = (-north_offset, -east_offset)
-        self.local_position[0] = grid_start[0]
-        self.local_position[1] = grid_start[1]
-
-        # Set goal as some arbitrary position on the grid
-        grid_goal = (-north_offset +100, -east_offset -10)  # +200, -40
+        point_start = [int(self.local_position[0] - north_offset), int(self.local_position[1]- east_offset)]
+        point_goal = [int(local_goal[0] - north_offset), int(local_goal[1] - east_offset)]
 
         # Run A* to find a path from start to goal
-        print('Local Start and Goal: ', grid_start, grid_goal)
-        path, _ = a_star(grid, heuristic, grid_start, grid_goal)
-        
+        print('Local Start and Goal: ', point_start, point_goal)
 
-        print('type of path:', type(path))
-        path_copy = path.copy()
-        
-        pos = 0
-        for i in range(len(path)-2):
-            if collinearity_float(path_copy[pos], path_copy[pos+1], path_copy[pos+2]):
-                _ = path_copy.pop(pos+1)
-                #print('path_copy:', path_copy)
-            else: pos += 1
+        start_nearest = closest_point(nodes, point_start)
+        goal_nearest = closest_point(nodes, point_goal)
+        print('start nearest:', start_nearest, 'goal nearest:', goal_nearest)
 
-        path = path_copy
+        path_graph, _ = a_star_graph(edges, heuristic, start_nearest, goal_nearest)
 
-        print('A star calculation done')
+
+        path = [point_start]
+        for g in path_graph:
+            path.append([g[0],g[1]])
+        path.append(goal_nearest)
+        path.append(point_goal)
+
+        print('path:', path)
+
+
         # Convert path to waypoints
         waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
         # Set self.waypoints
         self.waypoints = waypoints
-        self.send_waypoints()
+        
+        print('waypoints:')
+        print(self.waypoints)
+        
+        #self.send_waypoints()
 
     def start(self):
         self.start_log("Logs", "NavLog.txt")
@@ -197,10 +252,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=5760, help='Port number')
     parser.add_argument('--host', type=str, default='127.0.0.1', help="host address, i.e. '127.0.0.1'")
+    parser.add_argument('--grid', type=str, default='y', help='whether to calculate the gird (y) or load existing grid (n)')
     args = parser.parse_args()
 
     conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), timeout=6000)
-    drone = MotionPlanning(conn)
+    drone = MotionPlanning(conn, grid=args.grid)
     time.sleep(1)
 
     drone.start()

@@ -9,16 +9,24 @@
 
 ## Approach
 
-- Distretize the space in to 2D grid 
-- Add height information to make it to 2.5D dimensions, and check feasibility of moving from one point to another point in the grid
-- Then apply A* search algorithm to create the optimal path 
-- Remove middle points by checking collinearity
+- Applied graph to simplifiied the 3D route into nodes and edges
+    -  First consider the obstacles in specified attitude  
+    -  Then made edge and nodes based on Voronoi algorithm (as shown below)
+
+![img](graph.png)
+
+- Then applied A* search algorithm to create the optimal path 
 - This uses [UdaciDrone API](https://udacity.github.io/udacidrone/) to control the drone
 
 
 ## Result
 
-- The drone could fly a 10 meter box 
+- The drone could smoothly moved to the specified point (see video 'video.mp4')
+- The route planning was quite quick
+
+
+## Further Improvements
+- THe micro route between nodes is not always optimal, since nodes are located at the center between obstacles. To further opimize the route, this point can be considered.
 
 ## How to run
 - Download the Simulator [from this repository](https://github.com/udacity/FCND-Simulator-Releases/releases).
