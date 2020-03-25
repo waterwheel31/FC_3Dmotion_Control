@@ -27,7 +27,7 @@
 
 
 ## Further Improvements
-- THe micro route between nodes is not always optimal, since nodes are located at the center between obstacles. To further opimize the route, this point can be considered.
+- The micro routes between nodes are not always optimal, since nodes are located at the center between obstacles. To further opimize the route, smoothing should be considered. 
 
 ## How to run
 - Download the Simulator [from this repository](https://github.com/udacity/FCND-Simulator-Releases/releases).
