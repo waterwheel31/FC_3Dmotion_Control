@@ -1,7 +1,9 @@
 # Drone 3D Motion Plannning 
 
-<p align="center"> <img width="400" src="Video.gif"> </p>
+<p align="center"> <img width="400" src="Video.gif"><br>
 (this is a partial video, see Video.mp4 for full video)
+ </p>
+
 
 
 ## Objective 
