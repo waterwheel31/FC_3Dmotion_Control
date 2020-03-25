@@ -13,7 +13,7 @@
 
 ## Approach
 
-- Applied graph to simplifiied the 3D route into nodes and edges
+- Applied graph to simplifiied the 3D continuous space into nodes and edges
     -  First consider the obstacles in specified attitude  
     -  Then made edge and nodes based on Voronoi algorithm (as shown below)
 
@@ -36,5 +36,5 @@
 - Download the Simulator [from this repository](https://github.com/udacity/FCND-Simulator-Releases/releases).
 - Set up Conda envrionment seeing [this repository](https://github.com/udacity/FCND-Term1-Starter-Kit) and activate it ('source activate fcnd')
 - Run the simulator and choose Motion Planning environment
-- Run following `python motion_planning.py` 
+- Run following `python motion_planning.py --path n` 
 
