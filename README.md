@@ -1,5 +1,6 @@
 # Drone 3D Motion Plannning 
 
+<p align="center"> <img width="400" src="Video.gif"> </p>
 
 
 ## Objective 
@@ -13,7 +14,7 @@
     -  First consider the obstacles in specified attitude  
     -  Then made edge and nodes based on Voronoi algorithm (as shown below)
 
-![img](graph.png)
+<p align="center"> <img width="400" src="graph.png"> </p>
 
 - Then applied A* search algorithm to create the optimal path 
 - This uses [UdaciDrone API](https://udacity.github.io/udacidrone/) to control the drone
@@ -22,7 +23,7 @@
 ## Result
 
 - The drone could smoothly moved to the specified point (see video 'video.mp4')
-- The route planning was quite quick
+- The A* search route planning was quick when using the graph, completed within a second. This is opposite to using grid, that took minutes. 
 
 
 ## Further Improvements
