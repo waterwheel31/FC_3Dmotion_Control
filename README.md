@@ -36,5 +36,5 @@
 - Download the Simulator [from this repository](https://github.com/udacity/FCND-Simulator-Releases/releases).
 - Set up Conda envrionment seeing [this repository](https://github.com/udacity/FCND-Term1-Starter-Kit) and activate it ('source activate fcnd')
 - Run the simulator and choose Motion Planning environment
-- Run following `python motion_planning.py --path n` 
+- Run following `python motion_planning.py --grid n` 
 
