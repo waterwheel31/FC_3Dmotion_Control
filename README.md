@@ -9,7 +9,7 @@
 ## Objective 
 
 - Create a path from one point to another point, and create the path in 3D environment (a virtual city)
-- Move a virtual drone to move along the path between nodes (the node cloest to start point and the node closest to goal point)
+- Move a virtual drone to move along the path
 
 ## Approach
 
@@ -19,7 +19,7 @@
 
 <p align="center"> <img width="400" src="graph.png"> </p>
 
-- Then applied A* search algorithm to create the optimal path 
+- Then applied A* search algorithm to create the optimal path between nodes (the node cloest to start point and the node closest to goal point)
 - This uses [UdaciDrone API](https://udacity.github.io/udacidrone/) to control the drone
 
 
