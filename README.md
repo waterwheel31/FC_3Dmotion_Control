@@ -6,7 +6,7 @@
 ## Objective 
 
 - Create a path from one point to another point, and create the path in 3D environment (a virtual city)
-- Move a virtual drone to move along the path.
+- Move a virtual drone to move along the path between nodes (the node cloest to start point and the node closest to goal point)
 
 ## Approach
 
